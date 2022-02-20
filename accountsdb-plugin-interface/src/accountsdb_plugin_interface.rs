@@ -6,7 +6,7 @@ use {
     solana_runtime::{bank::Bank, bank_forks::BankForks},
     solana_sdk::{clock::UnixTimestamp, signature::Signature, transaction::SanitizedTransaction},
     solana_transaction_status::{Reward, TransactionStatusMeta},
-    std::sync::{Arc, RwLock},
+    std::sync::Arc,
     std::{any::Any, error, io},
     thiserror::Error,
 };
