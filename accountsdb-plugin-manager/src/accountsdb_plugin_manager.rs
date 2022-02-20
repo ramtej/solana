@@ -3,7 +3,9 @@ use {
     libloading::{Library, Symbol},
     log::*,
     solana_accountsdb_plugin_interface::accountsdb_plugin_interface::AccountsDbPlugin,
+    solana_runtime::{bank::Bank, bank_forks::BankForks, snapshot_utils},
     std::error::Error,
+    std::sync::{Arc, RwLock},
 };
 
 #[derive(Default, Debug)]

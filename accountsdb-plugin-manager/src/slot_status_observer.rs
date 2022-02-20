@@ -60,16 +60,22 @@ impl SlotStatusObserver {
                                     .notify_slot_confirmed(slot, None);
                             }
                             BankNotification::Frozen(bank) => {
-                                slot_status_notifier
-                                    .read()
-                                    .unwrap()
-                                    .notify_slot_processed(bank.slot(), Some(bank.parent_slot()));
+                                let slot = bank.clone().slot();
+                                let parent_slot = bank.clone().parent_slot();
+                                slot_status_notifier.read().unwrap().notify_slot_processed(
+                                    bank,
+                                    slot,
+                                    Some(parent_slot),
+                                );
                             }
                             BankNotification::Root(bank) => {
-                                slot_status_notifier
-                                    .read()
-                                    .unwrap()
-                                    .notify_slot_rooted(bank.slot(), Some(bank.parent_slot()));
+                                let slot = bank.clone().slot();
+                                let parent_slot = bank.clone().parent_slot();
+                                slot_status_notifier.read().unwrap().notify_slot_rooted(
+                                    bank,
+                                    slot,
+                                    Some(parent_slot),
+                                );
                             }
                         }
                     }

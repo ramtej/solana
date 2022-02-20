@@ -4,6 +4,7 @@ use {
     solana_accountsdb_plugin_interface::accountsdb_plugin_interface::SlotStatus,
     solana_measure::measure::Measure,
     solana_metrics::*,
+    solana_runtime::bank::Bank,
     solana_sdk::clock::Slot,
     std::sync::{Arc, RwLock},
 };
@@ -13,10 +14,10 @@ pub trait SlotStatusNotifierInterface {
     fn notify_slot_confirmed(&self, slot: Slot, parent: Option<Slot>);
 
     /// Notified when a slot is marked frozen.
-    fn notify_slot_processed(&self, slot: Slot, parent: Option<Slot>);
+    fn notify_slot_processed(&self, bank: Arc<Bank>, slot: Slot, parent: Option<Slot>);
 
     /// Notified when a slot is rooted.
-    fn notify_slot_rooted(&self, slot: Slot, parent: Option<Slot>);
+    fn notify_slot_rooted(&self, bank: Arc<Bank>, slot: Slot, parent: Option<Slot>);
 }
 
 pub type SlotStatusNotifier = Arc<RwLock<dyn SlotStatusNotifierInterface + Sync + Send>>;
@@ -27,15 +28,15 @@ pub struct SlotStatusNotifierImpl {
 
 impl SlotStatusNotifierInterface for SlotStatusNotifierImpl {
     fn notify_slot_confirmed(&self, slot: Slot, parent: Option<Slot>) {
-        self.notify_slot_status(slot, parent, SlotStatus::Confirmed);
+        self.notify_slot_status(None, slot, parent, SlotStatus::Confirmed);
     }
 
-    fn notify_slot_processed(&self, slot: Slot, parent: Option<Slot>) {
-        self.notify_slot_status(slot, parent, SlotStatus::Processed);
+    fn notify_slot_processed(&self, bank: Arc<Bank>, slot: Slot, parent: Option<Slot>) {
+        self.notify_slot_status(Some(bank), slot, parent, SlotStatus::Processed);
     }
 
-    fn notify_slot_rooted(&self, slot: Slot, parent: Option<Slot>) {
-        self.notify_slot_status(slot, parent, SlotStatus::Rooted);
+    fn notify_slot_rooted(&self, bank: Arc<Bank>, slot: Slot, parent: Option<Slot>) {
+        self.notify_slot_status(Some(bank), slot, parent, SlotStatus::Rooted);
     }
 }
 
@@ -44,7 +45,13 @@ impl SlotStatusNotifierImpl {
         Self { plugin_manager }
     }
 
-    pub fn notify_slot_status(&self, slot: Slot, parent: Option<Slot>, slot_status: SlotStatus) {
+    pub fn notify_slot_status(
+        &self,
+        bank: Option<Arc<Bank>>,
+        slot: Slot,
+        parent: Option<Slot>,
+        slot_status: SlotStatus,
+    ) {
         let mut plugin_manager = self.plugin_manager.write().unwrap();
         if plugin_manager.plugins.is_empty() {
             return;
@@ -52,7 +59,7 @@ impl SlotStatusNotifierImpl {
 
         for plugin in plugin_manager.plugins.iter_mut() {
             let mut measure = Measure::start("accountsdb-plugin-update-slot");
-            match plugin.update_slot_status(slot, parent, slot_status.clone()) {
+            match plugin.update_slot_status(bank.clone(), slot, parent, slot_status.clone()) {
                 Err(err) => {
                     error!(
                         "Failed to update slot status at slot {}, error: {} to plugin {}",
