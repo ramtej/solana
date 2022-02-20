@@ -3,8 +3,10 @@
 /// In addition, the dynamic library must export a "C" function _create_plugin which
 /// creates the implementation of the plugin.
 use {
+    solana_runtime::{bank::Bank, bank_forks::BankForks},
     solana_sdk::{clock::UnixTimestamp, signature::Signature, transaction::SanitizedTransaction},
     solana_transaction_status::{Reward, TransactionStatusMeta},
+    std::sync::{Arc, RwLock},
     std::{any::Any, error, io},
     thiserror::Error,
 };
@@ -181,6 +183,7 @@ pub trait AccountsDbPlugin: Any + Send + Sync + std::fmt::Debug {
     #[allow(unused_variables)]
     fn update_slot_status(
         &mut self,
+        bank: Option<Arc<Bank>>,
         slot: u64,
         parent: Option<u64>,
         status: SlotStatus,
