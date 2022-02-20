@@ -15,6 +15,8 @@ use {
         ReplicaBlockInfoVersions, ReplicaTransactionInfoVersions, Result, SlotStatus,
     },
     solana_metrics::*,
+    solana_runtime::bank::Bank,
+    std::sync::Arc,
     std::{fs::File, io::Read},
     thiserror::Error,
 };
@@ -247,6 +249,7 @@ impl AccountsDbPlugin for AccountsDbPluginPostgres {
 
     fn update_slot_status(
         &mut self,
+        bank: Option<Arc<Bank>>,
         slot: u64,
         parent: Option<u64>,
         status: SlotStatus,
