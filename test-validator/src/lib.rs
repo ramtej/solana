@@ -589,6 +589,8 @@ impl TestValidator {
             validator_config.tower_storage = tower_storage.clone();
         }
 
+        println!("validatorjja");
+
         let validator = Some(Validator::new(
             node,
             Arc::new(validator_identity),
